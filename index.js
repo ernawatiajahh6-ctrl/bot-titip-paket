@@ -23,7 +23,7 @@ bot.onText(/\/menu/, (msg) => {
     reply_markup: {
       keyboard: [
         ["📦 Titip Paket"],
-        ["💰 Cek Harga"],
+        ["⚖️ Input Berat"],
         ["📋 Format Order"]
       ],
       resize_keyboard: true
