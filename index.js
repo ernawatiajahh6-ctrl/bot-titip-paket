@@ -159,3 +159,6 @@ Metode Bayar:`);
 Silakan kirim alamat lengkap penerima.`);
   }
 });
+git add .
+git commit -m "Update index.js final siap pakai"
+git push origin main
