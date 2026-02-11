@@ -1,88 +1,72 @@
 const TelegramBot = require('node-telegram-bot-api');
-const puppeteer = require('puppeteer');
+const express = require('express');
 
-// ===== BOT TELEGRAM =====
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN; // token bot dari Railway ENV
-const bot = new TelegramBot(TOKEN, { polling: true });
+const token = process.env.BOT_TOKEN;
+const bot = new TelegramBot(token, { polling: true });
 
-// ===== DATA PAKET =====
-const PACKAGE_DATA = {
-  weight: '1',   // kg
-  length: '10',  // cm
-  width: '10',   // cm
-  height: '10'   // cm
-};
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// ===== LOGIN INDOPAKET =====
-const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // URL login
-const INDOPAKET_FORM_URL = 'https://www.indopaket.co.id/create-shipment'; // URL form pengiriman
-const USERNAME = process.env.INDOPAKET_EMAIL;   // email login dari ENV Railway
-const PASSWORD = process.env.INDOPAKET_PASSWORD; // password login dari ENV Railway
+app.get('/', (req, res) => {
+  res.send('Bot is running');
+});
 
-// ===== FUNGSI AUTOMATISASI =====
-async function kirimPaket() {
-  let status = '';
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-  try {
-    // ===== LOGIN =====
-    await page.goto(INDOPAKET_LOGIN_URL, { waitUntil: 'networkidle2' });
-    await page.type('input[name="email"]', USERNAME);
-    await page.type('input[name="password"]', PASSWORD);
-    await page.click('button[type="submit"]'); // sesuaikan selector login
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
-    // ===== BUKA FORM PENGIRIMAN =====
-    await page.goto(INDOPAKET_FORM_URL, { waitUntil: 'networkidle2' });
-    await page.waitForTimeout(2000);
-
-    // ===== ISI FORM =====
-    await page.type('input[name="weight"]', PACKAGE_DATA.weight);
-    await page.type('input[name="length"]', PACKAGE_DATA.length);
-    await page.type('input[name="width"]', PACKAGE_DATA.width);
-    await page.type('input[name="height"]', PACKAGE_DATA.height);
-
-    // ===== SUBMIT FORM =====
-    await page.click('button[type="submit"]'); // sesuaikan selector submit
-    await page.waitForTimeout(5000);
-
-    // ===== AMBIL STATUS =====
-    try {
-      status = await page.$eval('.alert-success', el => el.textContent.trim());
-    } catch {
-      status = 'Gagal mengirim paket atau elemen konfirmasi tidak ditemukan.';
+bot.onText(/\/start/,(msg) => {
+  bot.sendMessage(msg.chat.id, "Bot Titip Paket Aktif ✅");
+});
+bot.onText(/\/menu/, (msg) => {
+  bot.sendMessage(msg.chat.id, "Silakan pilih layanan:", {
+    reply_markup: {
+      keyboard: [
+        ["📦 Titip Paket"],
+        ["⚖️ Input Berat"],
+        ["📋 Format Order"]
+      ],
+      resize_keyboard: true
     }
+  });
+});
+bot.on('message', (msg) => {
+  const text = msg.text;
 
-  } catch (err) {
-    status = `Terjadi error: ${err.message}`;
+  if (text === "📦 Titip Paket") {
+    bot.sendMessage(msg.chat.id, "Silakan kirim detail paket:\n\nNama:\nAlamat:\nBerat:");
   }
 
-  await browser.close();
-  return status;
-}
+  if (text === "⚖️ Input Berat") {
+    bot.sendMessage(msg.chat.id, "Masukkan berat paket (kg):");
+  }
 
-// ===== BOT TELEGRAM COMMANDS =====
+  if (text === "📋 Format Order") {
+    bot.sendMessage(msg.chat.id,
+`FORMAT ORDER TITIP PAKET
 
-// /start
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(
-    msg.chat.id,
-    'Halo! Bot Titip Paket Indopaket siap mengirim paket otomatis.\n' +
-    'Ketik /kirim untuk mengirim paket dengan berat 1kg dan dimensi 10x10x10 cm.'
-  );
+Nama: Doni
+No HP: 083830950123
+Alamat: Jl. pahlawan
+Berat: 1
+Metode Bayar:`);
+  }
 });
+bot.on('message', (msg) => {
+  const text = msg.text;
 
-// /kirim
-bot.onText(/\/kirim/, async (msg) => {
-  bot.sendMessage(msg.chat.id, 'Sedang mengirim paket...');
-  const result = await kirimPaket();
-  bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
-});
-const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  // Deteksi jika user kirim angka atau angka + kg
+  const beratMatch = text.match(/^(\d+)(kg)?$/i);
+
+  if (beratMatch) {
+    const berat = parseInt(beratMatch[1]);
+    const hargaPerKg = 10000; // kamu bisa ubah
+    const total = berat * hargaPerKg;
+
+    bot.sendMessage(msg.chat.id,
+`📦 Berat diterima: ${berat} kg
+💰 Estimasi biaya: Rp ${total.toLocaleString()}
+
+Silakan kirim alamat lengkap penerima.`);
+  }
 });
