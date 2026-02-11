@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const puppeteer = require('puppeteer');
 
 // ===== BOT TELEGRAM =====
-const TOKEN = 'TOKEN_BOT_ANDA'; // Ganti dengan token bot Telegram
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN; // token bot dari Railway ENV
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 // ===== DATA PAKET =====
@@ -14,39 +14,43 @@ const PACKAGE_DATA = {
 };
 
 // ===== LOGIN INDOPAKET =====
-const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // Ganti URL login asli
-const INDOPAKET_FORM_URL = 'https://www.indopaket.co.id/create-shipment'; // Ganti URL form pengiriman
-const USERNAME = 'email_anda';   // Ganti dengan email login
-const PASSWORD = 'password_anda'; // Ganti dengan password login
+const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // URL login
+const INDOPAKET_FORM_URL = 'https://www.indopaket.co.id/create-shipment'; // URL form pengiriman
+const USERNAME = process.env.INDOPAKET_EMAIL;   // email login dari ENV Railway
+const PASSWORD = process.env.INDOPAKET_PASSWORD; // password login dari ENV Railway
 
 // ===== FUNGSI AUTOMATISASI =====
 async function kirimPaket() {
   let status = '';
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const page = await browser.newPage();
 
   try {
-    // Login
+    // ===== LOGIN =====
     await page.goto(INDOPAKET_LOGIN_URL, { waitUntil: 'networkidle2' });
     await page.type('input[name="email"]', USERNAME);
     await page.type('input[name="password"]', PASSWORD);
-    await page.click('button[type="submit"]'); // ganti selector sesuai button login
+    await page.click('button[type="submit"]'); // sesuaikan selector login
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-    // Buka form pengiriman
+    // ===== BUKA FORM PENGIRIMAN =====
     await page.goto(INDOPAKET_FORM_URL, { waitUntil: 'networkidle2' });
+    await page.waitForTimeout(2000);
 
-    // Isi form paket
+    // ===== ISI FORM =====
     await page.type('input[name="weight"]', PACKAGE_DATA.weight);
     await page.type('input[name="length"]', PACKAGE_DATA.length);
     await page.type('input[name="width"]', PACKAGE_DATA.width);
     await page.type('input[name="height"]', PACKAGE_DATA.height);
 
-    // Submit form
-    await page.click('button[type="submit"]'); // ganti selector sesuai button submit
+    // ===== SUBMIT FORM =====
+    await page.click('button[type="submit"]'); // sesuaikan selector submit
     await page.waitForTimeout(5000);
 
-    // Ambil status konfirmasi
+    // ===== AMBIL STATUS =====
     try {
       status = await page.$eval('.alert-success', el => el.textContent.trim());
     } catch {
@@ -67,7 +71,8 @@ async function kirimPaket() {
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    'Halo! Bot Indopaket siap mengirim paket otomatis.\nKetik /kirim untuk mengirim paket dengan berat 1kg dan dimensi 10x10x10 cm.'
+    'Halo! Bot Titip Paket Indopaket siap mengirim paket otomatis.\n' +
+    'Ketik /kirim untuk mengirim paket dengan berat 1kg dan dimensi 10x10x10 cm.'
   );
 });
 
