@@ -160,4 +160,15 @@ const browser = await puppeteer.launch({
   headless: true,
   args: ['--no-sandbox', '--disable-setuid-sandbox']
 });
+bot.onText(/\/kirim/, (msg) => {
+  bot.sendMessage(msg.chat.id, 'Bot menerima command, paket sedang diproses...');
+  
+  (async () => {
+    const result = await kirimPaket();
+    bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
+  })();
+});
+bot.on('message', (msg) => {
+  console.log('Pesan diterima:', msg.text);
+});
 
