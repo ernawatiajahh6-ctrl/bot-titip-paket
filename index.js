@@ -15,6 +15,16 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Bot Titip Paket Aktif ✅");
+bot.onText(/\/start/, bot.onText(/\/menu/, (msg) => {
+  bot.sendMessage(msg.chat.id, "Silakan pilih layanan:", {
+    reply_markup: {
+      keyboard: [
+        ["📦 Titip Paket"],
+        ["💰 Cek Harga"],
+        ["📋 Format Order"]
+      ],
+      resize_keyboard: true
+    }
+  });
 });
+
