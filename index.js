@@ -153,3 +153,7 @@ Silakan kirim alamat lengkap penerima.`);
     }
   }
 });
+bot.onText(/\/test/, (msg) => {
+  bot.sendMessage(msg.chat.id, 'Bot merespon OK!');
+});
+
