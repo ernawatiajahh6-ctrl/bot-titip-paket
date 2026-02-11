@@ -30,3 +30,25 @@ bot.onText(/\/menu/, (msg) => {
     }
   });
 });
+bot.on('message', (msg) => {
+  const text = msg.text;
+
+  if (text === "📦 Titip Paket") {
+    bot.sendMessage(msg.chat.id, "Silakan kirim detail paket:\n\nNama:\nAlamat:\nBerat:");
+  }
+
+  if (text === "💰 Cek Harga") {
+    bot.sendMessage(msg.chat.id, "Masukkan berat paket (kg):");
+  }
+
+  if (text === "📋 Format Order") {
+    bot.sendMessage(msg.chat.id,
+`FORMAT ORDER TITIP PAKET
+
+Nama: Doni
+No HP: 083830950123
+Alamat: Jl. pahlawan
+Berat: 1
+Metode Bayar:`);
+  }
+});
