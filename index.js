@@ -3,7 +3,7 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 
 // ===== BOT TELEGRAM =====
-const token = process.env.BOT_TOKEN; // Token bot dari Railway ENV
+const token = process.env.BOT_TOKEN; // token Telegram dari ENV Railway
 const bot = new TelegramBot(token, { polling: true });
 
 // ===== DIMENSI PAKET DEFAULT =====
@@ -15,8 +15,8 @@ const PACKAGE_DATA = {
 };
 
 // ===== LOGIN INDOPAKET =====
-const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // Ganti sesuai asli
-const INDOPAKET_FORM_URL = 'https://www.indopaket.co.id/create-shipment'; // Ganti sesuai asli
+const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // ganti sesuai asli
+const INDOPAKET_FORM_URL = 'https://www.indopaket.co.id/create-shipment'; // ganti sesuai asli
 const USERNAME = process.env.INDOPAKET_EMAIL;
 const PASSWORD = process.env.INDOPAKET_PASSWORD;
 
@@ -25,7 +25,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('Bot is running ✅');
+  res.send('Bot Titip Paket Aktif ✅');
 });
 
 app.listen(PORT, () => {
@@ -39,6 +39,7 @@ async function kirimPaket() {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
+
   const page = await browser.newPage();
 
   try {
@@ -80,7 +81,7 @@ async function kirimPaket() {
 
 // ===== BOT TELEGRAM MENU =====
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Bot Titip Paket Aktif ✅");
+  bot.sendMessage(msg.chat.id, "Bot Titip Paket Aktif ✅\nKetik /menu untuk melihat layanan.");
 });
 
 bot.onText(/\/menu/, (msg) => {
@@ -89,7 +90,8 @@ bot.onText(/\/menu/, (msg) => {
       keyboard: [
         ["📦 Titip Paket"],
         ["⚖️ Input Berat"],
-        ["📋 Format Order"]
+        ["📋 Format Order"],
+        ["🚀 Kirim Paket"]
       ],
       resize_keyboard: true
     }
@@ -128,6 +130,21 @@ Dimensi: 10x10x10 cm
 Metode Bayar:`);
   }
 
+  // Tombol Kirim Paket → jalankan Puppeteer
+  if (text === "🚀 Kirim Paket") {
+    bot.sendMessage(msg.chat.id, "Sedang memproses titip paket otomatis...");
+
+    // Jalankan Puppeteer di background supaya bot tetap merespon
+    (async () => {
+      try {
+        const result = await kirimPaket();
+        bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
+      } catch (err) {
+        bot.sendMessage(msg.chat.id, `Terjadi error saat proses paket: ${err.message}`);
+      }
+    })();
+  }
+
   // Deteksi input angka sebagai berat
   const beratMatch = text.match(/^(\d+)(kg)?$/i);
   if (beratMatch) {
@@ -141,34 +158,4 @@ Metode Bayar:`);
 
 Silakan kirim alamat lengkap penerima.`);
   }
-
-  // Jika user mengetik "Kirim Paket", jalankan Puppeteer otomatis
-  if (text.toLowerCase() === "kirim paket") {
-    bot.sendMessage(msg.chat.id, "Sedang memproses titip paket otomatis...");
-    try {
-      const result = await kirimPaket();
-      bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
-    } catch (err) {
-      bot.sendMessage(msg.chat.id, `Terjadi error saat proses paket: ${err.message}`);
-    }
-  }
 });
-bot.onText(/\/test/, (msg) => {
-  bot.sendMessage(msg.chat.id, 'Bot merespon OK!');
-});
-const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-});
-bot.onText(/\/kirim/, (msg) => {
-  bot.sendMessage(msg.chat.id, 'Bot menerima command, paket sedang diproses...');
-  
-  (async () => {
-    const result = await kirimPaket();
-    bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
-  })();
-});
-bot.on('message', (msg) => {
-  console.log('Pesan diterima:', msg.text);
-});
-
