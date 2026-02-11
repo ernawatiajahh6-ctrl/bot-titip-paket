@@ -82,3 +82,7 @@ bot.onText(/\/kirim/, async (msg) => {
   const result = await kirimPaket();
   bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
 });
+const browser = await puppeteer.launch({
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
