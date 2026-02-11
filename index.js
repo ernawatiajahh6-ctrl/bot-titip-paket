@@ -52,3 +52,21 @@ Berat: 1
 Metode Bayar:`);
   }
 });
+bot.on('message', (msg) => {
+  const text = msg.text;
+
+  // Deteksi jika user kirim angka atau angka + kg
+  const beratMatch = text.match(/^(\d+)(kg)?$/i);
+
+  if (beratMatch) {
+    const berat = parseInt(beratMatch[1]);
+    const hargaPerKg = 10000; // kamu bisa ubah
+    const total = berat * hargaPerKg;
+
+    bot.sendMessage(msg.chat.id,
+`📦 Berat diterima: ${berat} kg
+💰 Estimasi biaya: Rp ${total.toLocaleString()}
+
+Silakan kirim alamat lengkap penerima.`);
+  }
+});
