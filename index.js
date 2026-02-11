@@ -156,4 +156,8 @@ Silakan kirim alamat lengkap penerima.`);
 bot.onText(/\/test/, (msg) => {
   bot.sendMessage(msg.chat.id, 'Bot merespon OK!');
 });
+const browser = await puppeteer.launch({
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
 
