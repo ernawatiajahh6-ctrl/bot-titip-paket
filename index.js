@@ -37,7 +37,7 @@ bot.on('message', (msg) => {
     bot.sendMessage(msg.chat.id, "Silakan kirim detail paket:\n\nNama:\nAlamat:\nBerat:");
   }
 
-  if (text === "💰 Cek Harga") {
+  if (text === "⚖️ Input Berat") {
     bot.sendMessage(msg.chat.id, "Masukkan berat paket (kg):");
   }
 
