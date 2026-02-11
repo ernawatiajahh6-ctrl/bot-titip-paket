@@ -1,72 +1,67 @@
 const TelegramBot = require('node-telegram-bot-api');
-const express = require('express');
+const puppeteer = require('puppeteer');
 
-const token = process.env.BOT_TOKEN;
-const bot = new TelegramBot(token, { polling: true });
+// ===== Bot Telegram =====
+const TOKEN = 'TOKEN_BOT_ANDA'; // Ganti dengan token botmu
+const bot = new TelegramBot(TOKEN, { polling: true });
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// ===== Data paket =====
+const PACKAGE_DATA = {
+  weight: '1',   // kg
+  length: '10',  // cm
+  width: '10',   // cm
+  height: '10'   // cm
+};
 
-app.get('/', (req, res) => {
-  res.send('Bot is running');
-});
+// ===== Login Indopaket =====
+const INDOPAKET_LOGIN_URL = 'https://www.indopaket.co.id/login'; // Ganti URL asli
+const USERNAME = 'email_anda';   // Ganti email login
+const PASSWORD = 'password_anda'; // Ganti password
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+async function kirimPaket() {
+  const browser = await puppeteer.launch({ headless: false }); // headless: true untuk server
+  const page = await browser.newPage();
+  await page.goto(INDOPAKET_LOGIN_URL, { waitUntil: 'networkidle2' });
 
-bot.onText(/\/start/,(msg) => {
-  bot.sendMessage(msg.chat.id, "Bot Titip Paket Aktif ✅");
-});
-bot.onText(/\/menu/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Silakan pilih layanan:", {
-    reply_markup: {
-      keyboard: [
-        ["📦 Titip Paket"],
-        ["⚖️ Input Berat"],
-        ["📋 Format Order"]
-      ],
-      resize_keyboard: true
-    }
-  });
-});
-bot.on('message', (msg) => {
-  const text = msg.text;
+  // Login
+  await page.type('input[name="email"]', USERNAME);
+  await page.type('input[name="password"]', PASSWORD);
+  await page.click('button[type="submit"]'); // ganti selector sesuai button login
+  await page.waitForTimeout(5000);
 
-  if (text === "📦 Titip Paket") {
-    bot.sendMessage(msg.chat.id, "Silakan kirim detail paket:\n\nNama:\nAlamat:\nBerat:");
+  // Buka halaman form pengiriman
+  await page.goto('https://www.indopaket.co.id/create-shipment', { waitUntil: 'networkidle2' });
+  await page.waitForTimeout(3000);
+
+  // Isi form paket otomatis
+  await page.type('input[name="weight"]', PACKAGE_DATA.weight);
+  await page.type('input[name="length"]', PACKAGE_DATA.length);
+  await page.type('input[name="width"]', PACKAGE_DATA.width);
+  await page.type('input[name="height"]', PACKAGE_DATA.height);
+
+  // Submit form
+  await page.click('button[type="submit"]'); // ganti selector sesuai button submit
+  await page.waitForTimeout(5000);
+
+  // Ambil status (contoh ambil teks alert sukses)
+  let status = '';
+  try {
+    status = await page.$eval('.alert-success', el => el.textContent);
+  } catch {
+    status = 'Gagal mengirim paket atau elemen konfirmasi tidak ditemukan.';
   }
 
-  if (text === "⚖️ Input Berat") {
-    bot.sendMessage(msg.chat.id, "Masukkan berat paket (kg):");
-  }
+  await browser.close();
+  return status;
+}
 
-  if (text === "📋 Format Order") {
-    bot.sendMessage(msg.chat.id,
-`FORMAT ORDER TITIP PAKET
-
-Nama: Doni
-No HP: 083830950123
-Alamat: Jl. pahlawan
-Berat: 1
-Metode Bayar:`);
-  }
+// ===== Command Bot Telegram =====
+bot.onText(/\/start/, (msg) => {
+  bot.sendMessage(msg.chat.id, 'Halo! Bot siap mengirim paket Indopaket otomatis dengan berat 1kg dan dimensi 10x10x10 cm.\nKetik /kirim untuk mengirim paket.');
 });
-bot.on('message', (msg) => {
-  const text = msg.text;
 
-  // Deteksi jika user kirim angka atau angka + kg
-  const beratMatch = text.match(/^(\d+)(kg)?$/i);
-
-  if (beratMatch) {
-    const berat = parseInt(beratMatch[1]);
-    const hargaPerKg = 10000; // kamu bisa ubah
-    const total = berat * hargaPerKg;
-
-    bot.sendMessage(msg.chat.id,
-`📦 Berat diterima: ${berat} kg
-💰 Estimasi biaya: Rp ${total.toLocaleString()}
-
-Silakan kirim alamat lengkap penerima.`);
-  }
+bot.onText(/\/kirim/, async (msg) => {
+  bot.sendMessage(msg.chat.id, 'Sedang mengirim paket...');
+  const result = await kirimPaket();
+  bot.sendMessage(msg.chat.id, `Hasil: ${result}`);
 });
