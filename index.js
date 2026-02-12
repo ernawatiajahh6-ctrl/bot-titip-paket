@@ -45,11 +45,13 @@ bot.on('message', (msg) => {
     bot.sendMessage(msg.chat.id,
 `FORMAT ORDER TITIP PAKET
 
-Nama: Doni
-No HP: 083830950123
-Alamat: Jl. pahlawan
-Berat: 1
-Metode Bayar:`);
+Data Pengirim
+Nama : Tom
+No Hp : 08123456789
+Data Penerima : Jerry
+No Hp : 08123456789
+Kode Toko : F6b3 Juntinyuat
+`);
   }
 });
 bot.on('message', (msg) => {
