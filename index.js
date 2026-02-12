@@ -44,14 +44,16 @@ bot.on('message', (msg) => {
   if (text === "📋 Format Order") {
     bot.sendMessage(msg.chat.id,
 `FORMAT ORDER TITIP PAKET
-// Masuk menu Titip Paket
-  await page.goto("https://website-titip-paket.com/titip-paket");
 
-  // Isi dimensi
-  await page.type("#berat", "1");
-  await page.type("#panjang", "10");
-  await page.type("#lebar", "10");
-  await page.type("#tinggi", "10");
+Data Pengirim
+
+Nama: Tom
+No Hp : 08123456789
+
+Data Penerima 
+Nama : Jerry
+No Hp : 08123456789
+Kode Toko: FUCK`);
   }
 });
 bot.on('message', (msg) => {
